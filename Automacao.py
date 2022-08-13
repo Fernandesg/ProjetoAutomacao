@@ -3,18 +3,44 @@ import time
 from passwords import *
 
 with sync_playwright() as p:
-    item = 'SRVT00190'
-    titulo_requisicao = 'AJUSTE IGPM FATURA NF 191382'
-    valorun = '7.42'
-    quant = '11'
-    data_esperada = '12/08/2022'
-    filialSAPII =  "86 - VERO SANTO ANTONIO DA PATRULHA II"
-    filialSAP = "75 - VERO SANTO ANTONIO DA PATRULHA"
-    filial = filialSAPII
+    item = int(input('Selecione o item: \n' + '1: SRVT00190\n' + '2: Inserir outro\n' + 'Selecione a opção desejada: '))
+    if item == 1:
+        item = 'SRVT00190'
+    elif item == 2:
+        item = input('Insira o código do item: ').upper()
+    else:
+        print('|-----OPÇÃO INVÁLIDA-----|')
+        exit()
+
+    titulo_requisicao = input('Insira o título da requisição: ')
+    valorun = str(input('Insira o valor unitário: ')).replace(',','.')
+    quant = str(input('Insira a quantidade: '))
+    data_esperada = input('Insira a data: Ex: DD/MM/AAAA: ')
+
+    filial = str(input('FILIAIS:\n' + '1: 75 - VERO SANTO ANTONIO DA PATRULHA\n' + '2: 86 - VERO SANTO ANTONIO DA PATRULHA II\n'+ 
+    'Seleciona a opção: '))
+
+    if filial == '1':
+        filial = '75 - VERO SANTO ANTONIO DA PATRULHA'
+    elif filial == '2':
+        filial = '86 - VERO SANTO ANTONIO DA PATRULHA II'
+    else:
+        print('|-----OPÇÃO INVÁLIDA-----|')
+        exit()
+
+    print('-=' * 15 + ' RESUMO DA REQUISIÇÃO ' + '=-' * 15)
+    print('Item: ' + item)
+    print('Título da requisição: ' + titulo_requisicao)
+    print('Valor un: R$' + valorun.replace('.',','))
+    print('Quantidade: ' + quant)
+    print('Data: ' + data_esperada)
+    print('Filial: ' + filial)
+    continuar = input('Deseja continuar? [S]/[N]: ').upper()
+    if continuar == 'N':
+        exit()
+
 
     valorTotal = str(float(valorun) * int(quant))
-    usuario_me = usuario_me
-    senha_me = senha_me
     browser = p.chromium.launch()
     page = browser.new_page()
     page.goto(site)
