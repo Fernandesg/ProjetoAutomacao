@@ -2,7 +2,7 @@ from datetime import date
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 
-passwords = open('passwords.txt', 'r')
+passwords = open('C:/DEV/PYTHON/ProjetoAutomacao/passwords.txt', 'r')
 login = []
 
 for linhas in passwords:
@@ -21,6 +21,8 @@ layout = [
     [sg.Push(), sg.Input('SRVT00190', size=(20, 1), key='item'), sg.Push(), sg.Input(key='valorun', size=(20, 1)), sg.Push()],
     [sg.Text('      Quantidade'), sg.Push(), sg.Text('    Data esperada'), sg.Push(), ],
     [sg.Push(), sg.Input(key='quant', size=(20, 1)), sg.Push(), sg.Input(today.strftime("%d/%m/%Y"), key='data_esperada', size=(20, 1)), sg.Push(), ],
+    [sg.Text('      Selecione a categoria'),sg.Text('                   Centro de custo'), sg.Push()],
+    [sg.Push() ,sg.Combo(['PEDIDO COMPRA PADRÃO','PEDIDO REGULARIZAÇÃO'], key='catPedido', size=(25,1)),sg.Push(),sg.Input('0312', size=(15, 1), key='centrocusto'), sg.Push()],
     [sg.Text('      Selecione a filial'), sg.Push()],
     [sg.Push(), sg.Combo(['75 - VERO SANTO ANTONIO DA PATRULHA','86 - VERO SANTO ANTONIO DA PATRULHA II'], key='filial', size=(43,1)), sg.Push()],
     [sg.Push(), sg.Button('Criar requisição', size=(17, 1)), sg.Push(), sg.Button('Cancelar', size=(17, 1)), sg.Push()],
@@ -43,6 +45,8 @@ while True:
         case 'Cancelar':
             break
         case 'Criar requisição': 
+            centro_custo = values['centrocusto']
+            cat_Pedido = values['catPedido']
             titulo_requisicao = values['titulo_requisicao']
             item = values['item']
             valorun = str(values['valorun']).replace(',','.')
@@ -54,7 +58,7 @@ while True:
 
             with sync_playwright() as p:
                 valorTotal = str(float(valorun) * int(quant))
-                browser = p.chromium.launch(channel="chrome")
+                browser = p.chromium.launch(channel="chrome",headless=False)
                 page = browser.new_page()
                 page.goto(site)
                 progress_bar.update(visible = True)
@@ -74,15 +78,24 @@ while True:
                 page.locator('xpath=//*[@id="__layout"]/div/main/div/div/div[2]/div/div[1]/section/div[1]/div[2]/ul/li[1]/a').click()
                 page.locator('xpath=//*[@id="__layout"]/div/main/div/div/div[2]/div/div[1]/section/div[1]/div[2]/ul[2]/li[1]/a').click()
                 frame = page.frame_locator('#PopUpConfiguration-if')
-                frame.locator('//*[@id="BOrgs_1__BorgDescription"]').fill(filial)
                 page.wait_for_timeout(1000)
-                frame.locator('//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
-                page.wait_for_timeout(1000)
-                frame.locator('//*[@id="btnSave"]').click()
+                frame.locator('xpath=//*[@id="select2-Categoria_Value-container"]').click()
+                page.wait_for_timeout(500)
+                frame.locator('xpath=/html/body/span/span/span[1]/input').fill(cat_Pedido)
+                page.wait_for_timeout(500)
+                frame.locator('xpath=/html/body/span/span/span[1]/input').press('Enter')
+                page.wait_for_timeout(500)
+                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
+                page.wait_for_timeout(500)
+                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').fill(filial)
+                page.wait_for_timeout(500)
+                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
+                frame.locator('xpath=//*[@id="btnSave"]').click()
 
                 # SELECIONA ITENS E QUANTIDADES
                 window['mensagemProgresso'].update('Adicionando itens e quantidades')      
                 progress_bar.update_bar(3)
+                page.wait_for_timeout(1000)
                 page.locator('xpath=//*[@id="Valor"]').fill(item)
                 page.locator('xpath=//*[@id="btnSearchSimple"]').click()
                 page.locator('xpath=//*[@id="149419566"]').click()
@@ -98,7 +111,7 @@ while True:
                 progress_bar.update_bar(4)
                 page.locator('xpath=//*[@id="Titulo_Value"]').fill(titulo_requisicao)
                 page.locator('xpath=//*[@id="DataEsperada_Value"]').fill(data_esperada)
-                page.wait_for_timeout(10000)
+                page.wait_for_timeout(500)
                 page.locator('xpath=//*[@id="select2-LocalEntrega_Value-container"]').click()
                 page.locator('xpath=/html/body/span/span/span[1]/input').fill(filial[5:])
                 page.locator('xpath=/html/body/span/span/span[1]/input').press('Enter')
@@ -117,9 +130,13 @@ while True:
                 page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').click()
                 page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').press('Enter')
                 page.wait_for_timeout(1000)
-                page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
-                page.locator('xpath=//*[@id="Itens_0__Attributes_1__valor"]').fill(titulo_requisicao)
+                if cat_Pedido == 'PEDIDO REGULARIZAÇÃO':
+                    page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
+                else:
+                    page.locator('xpath=//*[@id="Itens_0__Attributes_1__valor"]').fill(titulo_requisicao)
+                    page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
                 page.locator('xpath=//*[@id="btnAvancar"]').click()
+                page.wait_for_timeout(10000)
 
                 # FINALIZAR REQUISIÇÃO
                 window['mensagemProgresso'].update('Finalizando a requisição')      
