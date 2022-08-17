@@ -18,7 +18,7 @@ layout = [
     [sg.Text('      Selecione a filial'), sg.Push()],
     [sg.Push(), sg.Combo(['75 - VERO SANTO ANTONIO DA PATRULHA','86 - VERO SANTO ANTONIO DA PATRULHA II'], key='filial', size=(43,1)), sg.Push()],
     [sg.Push(), sg.Button('Criar requisição', size=(17, 1)), sg.Push(), sg.Button('Cancelar', size=(17, 1)), sg.Push()],
-    [sg.Push(), sg.ProgressBar(max_value=8, orientation='h', size=(20, 20), key='progress', visible=False),sg.Push(), sg.Text('', visible=False, key='espacamento',size=(8,1))],
+    [sg.Push(), sg.ProgressBar(max_value=7, orientation='h', size=(20, 20), key='progress', visible=False),sg.Push(), sg.Text('', visible=False, key='espacamento',size=(8,1))],
     [sg.Push(), sg.Text('', key='mensagemProgresso'), sg.Push(),],
     [sg.Push(), sg.Text('', key='mensagem2'), sg.Push(),],
     [sg.Push(), sg.Text('', key='mensagem3'), sg.Push(), sg.Input('', key='mensagem4',size=(18,1),disabled=True, visible=False), sg.Push(), sg.Text('', visible=False, key='espacamento2',size=(8,1))]
@@ -91,6 +91,8 @@ while True:
                 window['mensagemProgresso'].update('Ajustando condições gerais')      
                 progress_bar.update_bar(4)
                 page.locator('xpath=//*[@id="Titulo_Value"]').fill(titulo_requisicao)
+                page.locator('xpath=//*[@id="DataEsperada_Value"]').fill(data_esperada)
+                page.wait_for_timeout(10000)
                 page.locator('xpath=//*[@id="select2-LocalEntrega_Value-container"]').click()
                 page.locator('xpath=/html/body/span/span/span[1]/input').fill(filial[5:])
                 page.locator('xpath=/html/body/span/span/span[1]/input').press('Enter')
@@ -119,6 +121,7 @@ while True:
                 page.locator('xpath=//*[@id="btnAvancar"]').click()
                 requisicao = page.locator('.badge-code ')
                 page.wait_for_timeout(1000)
+                progress_bar.update_bar(7)
                 window['mensagemProgresso'].update('########### REQUISIÇÃO FINALIZADA ###########')
                 window['mensagem2'].update(titulo_requisicao)
                 window['mensagem3'].update('Sua requisição é: ')
