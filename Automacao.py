@@ -1,12 +1,18 @@
 from datetime import date
-import time
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
-from passwords import *
-import sys
+
+passwords = open('passwords.txt', 'r')
+login = []
+
+for linhas in passwords:
+    linhas = linhas.strip()
+    login.append(linhas)
+usuario_me = login[0][14:-1]
+senha_me = login[1][12:-1]
+site = login[2][8:-1]
 
 today = date.today()
-
 
 layout = [
     [sg.Text('      Título da requisição'), sg.Push()],
@@ -48,7 +54,7 @@ while True:
 
             with sync_playwright() as p:
                 valorTotal = str(float(valorun) * int(quant))
-                browser = p.chromium.launch()
+                browser = p.chromium.launch(channel="chrome")
                 page = browser.new_page()
                 page.goto(site)
                 progress_bar.update(visible = True)
