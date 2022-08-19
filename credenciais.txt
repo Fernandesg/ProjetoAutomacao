@@ -1,0 +1,3 @@
+usuario_me = "VERO_GFERNANDES"
+senha_me = "(Gui150394)"
+site = "https://www.me.com.br/home"

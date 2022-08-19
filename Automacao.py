@@ -1,9 +1,15 @@
-from datetime import date
+from email.policy import default
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
+import subprocess
 
-passwords = open('C:/DEV/PYTHON/ProjetoAutomacao/credenciais.txt', 'r')
+si = subprocess.STARTUPINFO()
+si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+#si.wShowWindow = subprocess.SW_HIDE # default
+subprocess.call('taskkill /F /IM cmd.exe', startupinfo=si)
+
+passwords = open('credenciais.txt', 'r')
 login = []
 
 for linhas in passwords:
@@ -13,54 +19,54 @@ usuario_me = login[0][14:-1]
 senha_me = login[1][12:-1]
 site = login[2][8:-1]
 
-filiais_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/filiais.txt', 'r')
+filiais_caminho = open('filiais.txt', 'r')
 filiais = []
 
 for linhas in filiais_caminho:
     linhas = linhas.strip()
     filiais.append(linhas)
 
-cod_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/codigos.txt', 'r')
+cod_caminho = open('codigos.txt', 'r')
 codigos = []
 
 for linhas in cod_caminho:
     linhas = linhas.strip()
     codigos.append(linhas)
 
-cc_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/centrocustos.txt', 'r')
+cc_caminho = open('centrocustos.txt', 'r')
 centroCustos = []
 
 for linhas in cc_caminho:
     linhas = linhas.strip()
     centroCustos.append(linhas)
 
-categorias_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/categorias.txt', 'r')
+categorias_caminho = open('categorias.txt', 'r')
 categorias = []
 
 for linhas in categorias_caminho:
     linhas = linhas.strip()
     categorias.append(linhas)
 
-today = date.today()
 
 menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos', 'Filiais','---','Credenciais ME']]]
 layout = [
     [sg.Menu(menu_def, pad=(10,10))],
     [sg.Text('      Título da requisição'), sg.Push()],
-    [sg.Push(), sg.Input(key='titulo_requisicao'), sg.Push()],
+    [sg.Push(), sg.Input(key='titulo_requisicao', enable_events=True), sg.Push()],
     [sg.Text('      Item'), sg.Push(), sg.Text('            Valor unitário'), sg.Push()],
-    [sg.Push(), sg.Combo(codigos, size=(18, 1), key='item', default_value='SRVT00190'), sg.Push(), sg.Input(key='valorun', size=(20, 1)), sg.Push()],
+    [sg.Push(), sg.Combo(codigos, size=(18, 1), key='item', enable_events=True), sg.Push(), sg.Input(key='valorun', size=(20, 1), enable_events=True), sg.Push()],
     [sg.Text('      Quantidade'), sg.Push(), sg.Text('    Data esperada'), sg.Push(), ],
-    [sg.Push(), sg.Input(key='quant', size=(20, 1)), sg.Push(), sg.Input(today.strftime("%d/%m/%Y"), key='data_esperada', size=(20, 1)), sg.Push(), ],
+    [sg.Push(), sg.Input(key='quant', size=(20, 1), enable_events=True), sg.Push(), sg.Input(key='data_esperada', size=(20, 1), enable_events=True), sg.Push(), ],
     [sg.Text('      Selecione a categoria'),sg.Text('                 Centro de custo'), sg.Push()],
-    [sg.Push() ,sg.Combo(categorias, key='catPedido', size=(23,1), readonly=True, default_value='PEDIDO COMPRA PADRAO'),sg.Combo(centroCustos, size=(16, 1), key='centrocusto', default_value='0312 - Supply Chain Estoque', readonly=True), sg.Push()],
+    [sg.Push() ,sg.Combo(categorias, key='catPedido', size=(23,1), readonly=True, enable_events=True),sg.Combo(centroCustos, size=(16, 1), key='centrocusto', readonly=True, enable_events=True), sg.Push()],
     [sg.Text('      Selecione a filial'), sg.Push()],
-    [sg.Push(), sg.Combo(filiais, key='filial', size=(43,1), readonly=True, default_value='86 - VERO SANTO ANTONIO DA PATRULHA II'), sg.Push()],
+    [sg.Push(), sg.Combo(filiais, key='filial', size=(43,1), readonly=True, enable_events=True), sg.Push()],
     [sg.Text('      Comentario:')],
     [sg.Push(), sg.Input(key='comentario'),sg.Push()],
-    [sg.Text("      Selecionar arquivo: (Apenas pedido de regularização)", key='txtSelecionaArquivo')], 
-    [sg.Push(),sg.Input(size=(35,1)), sg.FileBrowse('Procurar',key="caminhoArquivo"), sg.Push()],
-    [sg.Push(), sg.Button('Criar requisição', size=(17, 1)), sg.Push(), sg.Button('Cancelar', size=(17, 1)), sg.Push()],
+    [sg.Text("      Selecionar arquivo: (Apenas pedido de regularização)", key='txtSelecionaArquivo', visible=False)], 
+    [sg.Push(), sg.Input(size=(35,1), key='inputCaminhoArquivo', visible=False, enable_events=True), sg.FilesBrowse('Procurar', key="caminhoArquivo", visible=False), sg.Text('',size=(2,1), key='espacamentoCaminho', visible=False)],
+    [sg.Push(), sg.Text('', key='mensagemCampoVazio'), sg.Push(),],
+    [sg.Push(), sg.Button('Criar requisição', size=(17, 1),key='botaoCriar' ,disabled=True), sg.Push(), sg.Button('Cancelar', size=(17, 1)),sg.Button('Limpar', size=(17, 1), key='limpar'), sg.Push()],
     [sg.Push(), sg.ProgressBar(max_value=7, orientation='h', size=(20, 20), key='progress', visible=False),sg.Push(), sg.Text('', visible=False, key='espacamento',size=(8,1))],
     [sg.Push(), sg.Text('', key='mensagemProgresso'), sg.Push(),],
     [sg.Push(), sg.Text('', key='mensagem2'), sg.Push(),],
@@ -72,44 +78,95 @@ progress_bar = window['progress']
 
 while True:
     event, values = window.read()
+    print(event, values)
 
+    def limpaCampos():
+        window['titulo_requisicao'].update('')
+        window['item'].update('')
+        window['valorun'].update('')
+        window['quant'].update('')
+        window['data_esperada'].update('')
+        window['centrocusto'].update('')
+        window['filial'].update(values=[''])
+        window['inputCaminhoArquivo'].update('')
+        window['catPedido'].update('')
+        print('Limpa pedido executada')
+        print('-=' * 30)
+        print(event, values)
+        print('-=' * 30)
+
+    def validacao():   
+        if values['titulo_requisicao'] and values['item'] and values['valorun'] and values['quant'] and values['data_esperada'] and values['centrocusto'] and values['filial'] != '':
+            if values['catPedido'] == 'PEDIDO REGULARIZACAO':
+                if values['inputCaminhoArquivo'] != '':
+                        window['botaoCriar'].update(disabled=False)   
+            elif values['catPedido'] == 'PEDIDO COMPRA PADRAO':
+                window['botaoCriar'].update(disabled=False) 
+            else:
+                window['botaoCriar'].update(disabled=True) 
+        print('Validação executada')
+        print('-=' * 30)
+
+    def validaPedido():
+        if values['catPedido'] == 'PEDIDO REGULARIZACAO':
+            window['txtSelecionaArquivo'].update(visible = True)
+            window['inputCaminhoArquivo'].update(visible = True)
+            window['caminhoArquivo'].update(visible = True)
+            window['espacamentoCaminho'].update(visible = True)
+            
+        else:
+            window['txtSelecionaArquivo'].update(visible = False)
+            window['inputCaminhoArquivo'].update(visible = False)
+            window['caminhoArquivo'].update(visible = False)
+            window['espacamentoCaminho'].update(visible = False)
+        print('Valida pedido executada')
+        print('-=' * 30)
+
+    print(values['catPedido'])
+    validacao()
+    validaPedido()
+    
     match(event):
+        case 'limpar':
+            print('limpando')
+            limpaCampos()
         case 'Itens':
-            os.system('C:/DEV/PYTHON/ProjetoAutomacao/codigos.txt')
+            os.system('codigos.txt')
         case 'Categorias':
-            os.system('C:/DEV/PYTHON/ProjetoAutomacao/categorias.txt')
+            os.system('categorias.txt')
         case 'Centro de custos':
-            os.system('C:/DEV/PYTHON/ProjetoAutomacao/centrocustos.txt')
+            os.system('centrocustos.txt')
         case 'Filiais':
-            os.system('C:/DEV/PYTHON/ProjetoAutomacao/filiais.txt')
+            os.system('filiais.txt')
         case 'Credenciais ME':
-            os.system('C:/DEV/PYTHON/ProjetoAutomacao/passwords.txt')
-
+            os.system('passwords.txt')
         case None:
             break
         case 'Cancelar':
             break
         case 'Criar requisição': 
+            comentario = values['comentario']
+            caminho_arquivo = str(values["caminhoArquivo"]).split(';')
+            centro_custo = values['centrocusto']
+            cat_Pedido = values['catPedido']
+            titulo_requisicao = values['titulo_requisicao']
+            item = str(values['item']).replace(' ','')
+            valorun = str(values['valorun']).replace(',','.')
+            quant = str(values['quant'])
+            data_esperada = values['data_esperada']
+            filial = values['filial']
+            
             window['mensagem2'].update('')
             window['mensagem3'].update('')
             window['mensagem4'].update(visible=False)
             window['espacamento2'].update(visible = False)
             window['mensagem4'].update('')
 
-            comentario = values['comentario']
-            caminho_arquivo = values["caminhoArquivo"]
-            centro_custo = values['centrocusto']
-            cat_Pedido = values['catPedido']
-            titulo_requisicao = values['titulo_requisicao']
-            item = values['item']
-            valorun = str(values['valorun']).replace(',','.')
-            quant = str(values['quant'])
-            data_esperada = values['data_esperada']
-            filial = values['filial']
             progress_bar.update(visible = True)
             window['espacamento'].update(visible = True)
 
             with sync_playwright() as p:
+                
                 valorTotal = str(float(valorun) * int(quant))
                 browser = p.chromium.launch(channel="chrome",headless=False)
                 page = browser.new_page()
@@ -184,7 +241,7 @@ while True:
                 page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').click()
                 page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').press('Enter')
                 page.wait_for_timeout(1000)
-                if cat_Pedido == 'PEDIDO REGULARIZAÇÃO':
+                if cat_Pedido == 'PEDIDO REGULARIZACAO':
                     page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
                 else:
                     page.locator('xpath=//*[@id="Itens_0__Attributes_1__valor"]').fill(titulo_requisicao)
@@ -196,7 +253,7 @@ while True:
                 # FINALIZAR REQUISIÇÃO
                 window['mensagemProgresso'].update('Finalizando a requisição')      
                 progress_bar.update_bar(6)
-                if cat_Pedido == 'PEDIDO REGULARIZAÇÃO':
+                if cat_Pedido == 'PEDIDO REGULARIZACAO':
                     with page.expect_popup() as popup_info:
                         page.locator('xpath=//*[@id="anexoReq_link"]').click()
                         popup = popup_info.value
@@ -204,15 +261,15 @@ while True:
                         popup.locator('xpath=//*[@id="fuArquivo"]').set_input_files(caminho_arquivo)
                         popup.locator('xpath=//*[@id="ctl00_conteudo_formUpload_btn_ctl00_conteudo_formUpload_btnEnviar"]').click()
                         popup.wait_for_load_state()
-                        popup.close()  
+                        popup.close()
 
-                page.locator('xpath=//*[@id="btnAvancar"]').click()
-                requisicao = page.locator('.badge-code ')
-                page.wait_for_timeout(1000)
-                progress_bar.update_bar(7)
-                window['mensagemProgresso'].update('########### REQUISIÇÃO FINALIZADA ###########')
-                window['mensagem2'].update(titulo_requisicao)
-                window['mensagem3'].update('Sua requisição é: ')
-                window['mensagem4'].update(visible=True)
-                window['espacamento2'].update(visible = True)
-                window['mensagem4'].update(requisicao.inner_html().replace(' ',''))
+                # page.locator('xpath=//*[@id="btnAvancar"]').click()
+                # requisicao = page.locator('.badge-code ')
+                # page.wait_for_timeout(1000)
+                # progress_bar.update_bar(7)
+                # window['mensagemProgresso'].update('########### REQUISIÇÃO FINALIZADA ###########')
+                # window['mensagem2'].update(titulo_requisicao)
+                # window['mensagem3'].update('Sua requisição é: ')
+                # window['mensagem4'].update(visible=True)
+                # window['espacamento2'].update(visible = True)
+                # window['mensagem4'].update(requisicao.inner_html().replace(' ',''))
