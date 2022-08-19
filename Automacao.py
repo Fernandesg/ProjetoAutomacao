@@ -1,9 +1,9 @@
 from datetime import date
-from pydoc import visiblename
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
+import os
 
-passwords = open('C:/DEV/PYTHON/ProjetoAutomacao/passwords.txt', 'r')
+passwords = open('C:/DEV/PYTHON/ProjetoAutomacao/credenciais.txt', 'r')
 login = []
 
 for linhas in passwords:
@@ -27,16 +27,25 @@ for linhas in cod_caminho:
     linhas = linhas.strip()
     codigos.append(linhas)
 
-cc_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/centro de custos.txt', 'r')
+cc_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/centrocustos.txt', 'r')
 centroCustos = []
 
 for linhas in cc_caminho:
     linhas = linhas.strip()
     centroCustos.append(linhas)
 
+categorias_caminho = open('C:/DEV/PYTHON/ProjetoAutomacao/categorias.txt', 'r')
+categorias = []
+
+for linhas in categorias_caminho:
+    linhas = linhas.strip()
+    categorias.append(linhas)
+
 today = date.today()
 
+menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos', 'Filiais','---','Credenciais ME']]]
 layout = [
+    [sg.Menu(menu_def, pad=(10,10))],
     [sg.Text('      Título da requisição'), sg.Push()],
     [sg.Push(), sg.Input(key='titulo_requisicao'), sg.Push()],
     [sg.Text('      Item'), sg.Push(), sg.Text('            Valor unitário'), sg.Push()],
@@ -44,7 +53,7 @@ layout = [
     [sg.Text('      Quantidade'), sg.Push(), sg.Text('    Data esperada'), sg.Push(), ],
     [sg.Push(), sg.Input(key='quant', size=(20, 1)), sg.Push(), sg.Input(today.strftime("%d/%m/%Y"), key='data_esperada', size=(20, 1)), sg.Push(), ],
     [sg.Text('      Selecione a categoria'),sg.Text('                 Centro de custo'), sg.Push()],
-    [sg.Push() ,sg.Combo(['PEDIDO COMPRA PADRÃO','PEDIDO REGULARIZAÇÃO'], key='catPedido', size=(23,1), readonly=True, default_value='PEDIDO COMPRA PADRÃO'),sg.Combo(centroCustos, size=(16, 1), key='centrocusto', default_value='0312 - Supply Chain Estoque', readonly=True), sg.Push()],
+    [sg.Push() ,sg.Combo(categorias, key='catPedido', size=(23,1), readonly=True, default_value='PEDIDO COMPRA PADRAO'),sg.Combo(centroCustos, size=(16, 1), key='centrocusto', default_value='0312 - Supply Chain Estoque', readonly=True), sg.Push()],
     [sg.Text('      Selecione a filial'), sg.Push()],
     [sg.Push(), sg.Combo(filiais, key='filial', size=(43,1), readonly=True, default_value='86 - VERO SANTO ANTONIO DA PATRULHA II'), sg.Push()],
     [sg.Text('      Comentario:')],
@@ -64,8 +73,18 @@ progress_bar = window['progress']
 while True:
     event, values = window.read()
 
-
     match(event):
+        case 'Itens':
+            os.system('C:/DEV/PYTHON/ProjetoAutomacao/codigos.txt')
+        case 'Categorias':
+            os.system('C:/DEV/PYTHON/ProjetoAutomacao/categorias.txt')
+        case 'Centro de custos':
+            os.system('C:/DEV/PYTHON/ProjetoAutomacao/centrocustos.txt')
+        case 'Filiais':
+            os.system('C:/DEV/PYTHON/ProjetoAutomacao/filiais.txt')
+        case 'Credenciais ME':
+            os.system('C:/DEV/PYTHON/ProjetoAutomacao/passwords.txt')
+
         case None:
             break
         case 'Cancelar':
