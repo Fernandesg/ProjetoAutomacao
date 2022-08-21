@@ -1,13 +1,13 @@
-from email.policy import default
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
 import subprocess
 
-si = subprocess.STARTUPINFO()
-si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-#si.wShowWindow = subprocess.SW_HIDE # default
-subprocess.call('taskkill /F /IM cmd.exe', startupinfo=si)
+def fecharcmd():
+    si = subprocess.STARTUPINFO()
+    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
+    #si.wShowWindow = subprocess.SW_HIDE # default
+    subprocess.call('taskkill /F /IM cmd.exe', startupinfo=si)
 
 passwords = open('credenciais.txt', 'r')
 login = []
@@ -66,7 +66,7 @@ layout = [
     [sg.Text("      Selecionar arquivo: (Apenas pedido de regularização)", key='txtSelecionaArquivo', visible=False)], 
     [sg.Push(), sg.Input(size=(35,1), key='inputCaminhoArquivo', visible=False, enable_events=True), sg.FilesBrowse('Procurar', key="caminhoArquivo", visible=False), sg.Text('',size=(2,1), key='espacamentoCaminho', visible=False)],
     [sg.Push(), sg.Text('', key='mensagemCampoVazio'), sg.Push(),],
-    [sg.Push(), sg.Button('Criar requisição', size=(17, 1),key='botaoCriar' ,disabled=True), sg.Push(), sg.Button('Cancelar', size=(17, 1)),sg.Button('Limpar', size=(17, 1), key='limpar'), sg.Push()],
+    [sg.Push(), sg.Button('Criar requisição', size=(17, 1),key='botaoCriar', disabled=True), sg.Push(), sg.Button('Cancelar', size=(17, 1)),sg.Button('Limpar', size=(17, 1), key='limpar'), sg.Push()],
     [sg.Push(), sg.ProgressBar(max_value=7, orientation='h', size=(20, 20), key='progress', visible=False),sg.Push(), sg.Text('', visible=False, key='espacamento',size=(8,1))],
     [sg.Push(), sg.Text('', key='mensagemProgresso'), sg.Push(),],
     [sg.Push(), sg.Text('', key='mensagem2'), sg.Push(),],
@@ -78,73 +78,83 @@ progress_bar = window['progress']
 
 while True:
     event, values = window.read()
-    print(event, values)
-
-    def limpaCampos():
+    print (event)
+    def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
+        values['titulo_requisicao'] = ''
         window['item'].update('')
+        values['item'] = ''
         window['valorun'].update('')
+        values['valorun'] = ''
         window['quant'].update('')
+        values['quant'] = ''
         window['data_esperada'].update('')
+        values['data_esperada'] = ''
         window['centrocusto'].update('')
-        window['filial'].update(values=[''])
+        values['centrocusto'] = ''
+        window['filial'].update('')
+        values['filial'] = ''
         window['inputCaminhoArquivo'].update('')
+        values['inputCaminhoArquivo'] = ''
         window['catPedido'].update('')
-        print('Limpa pedido executada')
-        print('-=' * 30)
-        print(event, values)
-        print('-=' * 30)
+        values['catPedido'] = ''
+        validaPedido()
+        validacao()
+        window['botaoCriar'].update(disabled=True)
 
-    def validacao():   
-        if values['titulo_requisicao'] and values['item'] and values['valorun'] and values['quant'] and values['data_esperada'] and values['centrocusto'] and values['filial'] != '':
-            if values['catPedido'] == 'PEDIDO REGULARIZACAO':
-                if values['inputCaminhoArquivo'] != '':
-                        window['botaoCriar'].update(disabled=False)   
-            elif values['catPedido'] == 'PEDIDO COMPRA PADRAO':
-                window['botaoCriar'].update(disabled=False) 
+    def validacao():   # Verifica se todos campos estão preenchidos
+        if values['titulo_requisicao'] and values['catPedido'] and values['item'] and values['valorun'] and values['quant'] and values['data_esperada'] and values['centrocusto'] and values['filial'] != '':
+            if values['catPedido'] == 'PEDIDO REGULARIZACAO' and values['inputCaminhoArquivo'] == '':
+                window['botaoCriar'].update(disabled=True)
             else:
-                window['botaoCriar'].update(disabled=True) 
-        print('Validação executada')
-        print('-=' * 30)
+                window['botaoCriar'].update(disabled=False)
 
-    def validaPedido():
+    def validaPedido(): # Oculta campo de inserir arquivo
         if values['catPedido'] == 'PEDIDO REGULARIZACAO':
             window['txtSelecionaArquivo'].update(visible = True)
             window['inputCaminhoArquivo'].update(visible = True)
             window['caminhoArquivo'].update(visible = True)
             window['espacamentoCaminho'].update(visible = True)
-            
         else:
+            window['espacamentoCaminho'].update(visible = False)
             window['txtSelecionaArquivo'].update(visible = False)
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
-            window['espacamentoCaminho'].update(visible = False)
-        print('Valida pedido executada')
-        print('-=' * 30)
-
-    print(values['catPedido'])
+    print(site)
     validacao()
-    validaPedido()
-    
     match(event):
+        case 'catPedido':
+            validacao()
+            validaPedido()
+            window['inputCaminhoArquivo'].update('')
+            values['inputCaminhoArquivo'] = ''
         case 'limpar':
-            print('limpando')
             limpaCampos()
         case 'Itens':
+            fecharcmd()
             os.system('codigos.txt')
+            fecharcmd()
         case 'Categorias':
+            fecharcmd()
             os.system('categorias.txt')
+            fecharcmd()
         case 'Centro de custos':
+            fecharcmd()
             os.system('centrocustos.txt')
+            fecharcmd()
         case 'Filiais':
+            fecharcmd()
             os.system('filiais.txt')
+            fecharcmd()
         case 'Credenciais ME':
-            os.system('passwords.txt')
+            fecharcmd()
+            os.system('credenciais.txt')
+            fecharcmd()
         case None:
             break
         case 'Cancelar':
             break
-        case 'Criar requisição': 
+        case 'botaoCriar': 
             comentario = values['comentario']
             caminho_arquivo = str(values["caminhoArquivo"]).split(';')
             centro_custo = values['centrocusto']
