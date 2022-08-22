@@ -1,7 +1,11 @@
+from wsgiref.handlers import format_date_time
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
 import subprocess
+from datetime import datetime
+
+btCalendario = b'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGuSURBVHjarNS/b85RFMfx11N9tKiGikTSwSKxSAWxdDb4AyQmg/9BiJh0sFjE1jC0xKSLwSCpkjCQdFASosEgpEFoY6BazTH0PM1Jk8ojnpPcnPf9fu8993zO/SEilDYVEd/Wfftbm4uI6fqt26odw2EMowfntGd7sp3FDO6JiPPRORtpRERgFifxCH042GaGM+kPYRxDLcl38AxnsA/P2wx4CV9z7gSGGhHxGw9xEXNYwt42A77HJgxm3Y83ImIeO3TGFhoRsZS1GM30e7EtuYl+zCMwgO9Yxi78wM/k0zjanZOmcf0/s9uP4a7sLKcP3Cj8KvlX9uXiLb5aeBFrB3tr+lFMFZ5NvpylgLEMCpPYnNy3msaq3f6H67ZRG4+IaEn+VGReKfwg+S0+J98tMkcKf6ySW/4x3hV+UerWKsvL3Hn4gKfJzSp5ogOSx6rkL+lncaHwzeT7eJJ8rWxWtZUqdbE8R9sLDyTvXttFdua/9bZUAw6m7y8DKg8VPrHBwe6BRkTM5Yq3sJCLNPNKdeXAloLezGQFW0qwJk5hXkQciIjXHXhc30TEkT8DAFILwAACEvTGAAAAAElFTkSuQmCC'
 
 def fecharcmd():
     si = subprocess.STARTUPINFO()
@@ -19,44 +23,54 @@ usuario_me = login[0][14:-1]
 senha_me = login[1][12:-1]
 site = login[2][8:-1]
 
-filiais_caminho = open('filiais.txt', 'r')
+filiais_caminho = open('filiais.txt', 'r', encoding="UTF-8")
 filiais = []
 
 for linhas in filiais_caminho:
     linhas = linhas.strip()
     filiais.append(linhas)
 
-cod_caminho = open('codigos.txt', 'r')
+listaTipo = []
+dicioTipo = {}
+with open("TipoRequisicao.txt", encoding="UTF-8") as dicionarioTipoReq:
+    for line in dicionarioTipoReq:
+       (k, v) = line.split()
+       dicioTipo[str(k)] = v
+    for chave in dicioTipo.keys():
+        listaTipo.append(chave)
+
+cod_caminho = open('codigos.txt', 'r', encoding="UTF-8")
 codigos = []
 
 for linhas in cod_caminho:
     linhas = linhas.strip()
     codigos.append(linhas)
 
-cc_caminho = open('centrocustos.txt', 'r')
+cc_caminho = open('centrocustos.txt', 'r', encoding="UTF-8")
 centroCustos = []
 
 for linhas in cc_caminho:
     linhas = linhas.strip()
     centroCustos.append(linhas)
 
-categorias_caminho = open('categorias.txt', 'r')
+categorias_caminho = open('categorias.txt', 'r', encoding="UTF-8")
 categorias = []
 
 for linhas in categorias_caminho:
     linhas = linhas.strip()
     categorias.append(linhas)
 
-
 menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos', 'Filiais','---','Credenciais ME']]]
 layout = [
     [sg.Menu(menu_def, pad=(10,10))],
     [sg.Text('      Título da requisição'), sg.Push()],
     [sg.Push(), sg.Input(key='titulo_requisicao', enable_events=True), sg.Push()],
+    [sg.Text('      Tipo de requisição'), sg.Push()],
+    [sg.Push(), sg.Combo(listaTipo, key='tipoRequisicao', enable_events=True, size=(43,1), readonly=True), sg.Push()],
     [sg.Text('      Item'), sg.Push(), sg.Text('            Valor unitário'), sg.Push()],
     [sg.Push(), sg.Combo(codigos, size=(18, 1), key='item', enable_events=True), sg.Push(), sg.Input(key='valorun', size=(20, 1), enable_events=True), sg.Push()],
     [sg.Text('      Quantidade'), sg.Push(), sg.Text('    Data esperada'), sg.Push(), ],
-    [sg.Push(), sg.Input(key='quant', size=(20, 1), enable_events=True), sg.Push(), sg.Input(key='data_esperada', size=(20, 1), enable_events=True), sg.Push(), ],
+    [sg.Push(), sg.Input(key='quant', size=(20, 1), enable_events=True), sg.Push(), sg.Input(key='data_esperada', size=(19, 1), enable_events=True),sg.CalendarButton('',close_when_date_chosen=True,  target='data_esperada', no_titlebar=False, format='%d/%m/%Y', image_data=btCalendario)],
     [sg.Text('      Selecione a categoria'),sg.Text('                 Centro de custo'), sg.Push()],
     [sg.Push() ,sg.Combo(categorias, key='catPedido', size=(23,1), readonly=True, enable_events=True),sg.Combo(centroCustos, size=(16, 1), key='centrocusto', readonly=True, enable_events=True), sg.Push()],
     [sg.Text('      Selecione a filial'), sg.Push()],
@@ -75,10 +89,9 @@ layout = [
 
 window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout)
 progress_bar = window['progress']
-
 while True:
     event, values = window.read()
-    print (event)
+    
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
@@ -98,6 +111,10 @@ while True:
         values['inputCaminhoArquivo'] = ''
         window['catPedido'].update('')
         values['catPedido'] = ''
+        window['comentario'].update('')
+        values['comentario'] = ''
+        window['tipoRequisicao'].update('')
+        values['tipoRequisicao'] = ''
         validaPedido()
         validacao()
         window['botaoCriar'].update(disabled=True)
@@ -120,9 +137,14 @@ while True:
             window['txtSelecionaArquivo'].update(visible = False)
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
-    print(site)
+
+    match(values['tipoRequisicao']):
+        case 'Manutenção(serviço)':
+            print('Funcionando')
     validacao()
     match(event):
+        case 'tipoRequisicao':
+            window['item'].update(dicioTipo[values["tipoRequisicao"]])
         case 'catPedido':
             validacao()
             validaPedido()
@@ -150,6 +172,8 @@ while True:
             fecharcmd()
             os.system('credenciais.txt')
             fecharcmd()
+        case sg.WIN_CLOSED:
+            break
         case None:
             break
         case 'Cancelar':
@@ -178,7 +202,7 @@ while True:
             with sync_playwright() as p:
                 
                 valorTotal = str(float(valorun) * int(quant))
-                browser = p.chromium.launch(channel="chrome",headless=False)
+                browser = p.chromium.launch(channel="chrome", headless=False)
                 page = browser.new_page()
                 page.goto(site)
                 progress_bar.update(visible = True)
@@ -273,13 +297,13 @@ while True:
                         popup.wait_for_load_state()
                         popup.close()
 
-                # page.locator('xpath=//*[@id="btnAvancar"]').click()
-                # requisicao = page.locator('.badge-code ')
-                # page.wait_for_timeout(1000)
-                # progress_bar.update_bar(7)
-                # window['mensagemProgresso'].update('########### REQUISIÇÃO FINALIZADA ###########')
-                # window['mensagem2'].update(titulo_requisicao)
-                # window['mensagem3'].update('Sua requisição é: ')
-                # window['mensagem4'].update(visible=True)
-                # window['espacamento2'].update(visible = True)
-                # window['mensagem4'].update(requisicao.inner_html().replace(' ',''))
+                page.locator('xpath=//*[@id="btnAvancar"]').click()
+                requisicao = page.locator('.badge-code ')
+                page.wait_for_timeout(1000)
+                progress_bar.update_bar(7)
+                window['mensagemProgresso'].update('########### REQUISIÇÃO FINALIZADA ###########')
+                window['mensagem2'].update(titulo_requisicao)
+                window['mensagem3'].update('Sua requisição é: ')
+                window['mensagem4'].update(visible=True)
+                window['espacamento2'].update(visible = True)
+                window['mensagem4'].update(requisicao.inner_html().replace(' ',''))
