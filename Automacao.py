@@ -63,7 +63,7 @@ for linhas in categorias_caminho:
 menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos', 'Filiais','---','Credenciais ME']]]
 layout = [
     [sg.Menu(menu_def, pad=(10,10))],
-    [sg.Text('      Título da requisição'), sg.Push()],
+    [sg.Checkbox('Abre nav:', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push()],
     [sg.Push(), sg.Input(key='titulo_requisicao', enable_events=True), sg.Push()],
     [sg.Text('      Tipo de requisição'), sg.Push()],
     [sg.Push(), sg.Combo(listaTipo, key='tipoRequisicao', enable_events=True, size=(43,1), readonly=True), sg.Push()],
@@ -91,7 +91,7 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
-    
+    print(values['abrirNav'])
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
@@ -202,7 +202,10 @@ while True:
             with sync_playwright() as p:
                 
                 valorTotal = str(float(valorun) * int(quant))
-                browser = p.chromium.launch(channel="chrome", headless=False)
+                if values['abrirNav']:
+                    browser = p.chromium.launch(channel="chrome",headless=False)
+                else:
+                    browser = p.chromium.launch(channel="chrome")
                 page = browser.new_page()
                 page.goto(site)
                 progress_bar.update(visible = True)
