@@ -1,4 +1,3 @@
-from wsgiref.handlers import format_date_time
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
@@ -91,7 +90,6 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
-    print(values['abrirNav'])
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
