@@ -3,6 +3,13 @@ from playwright.sync_api import sync_playwright
 import os
 import subprocess
 from datetime import datetime
+import smtplib
+
+usuario = 'pythonautoriza@gmail.com'
+senha = 'rpvaraebxzttqfss'
+s = smtplib.SMTP('smtp.gmail.com: 587')
+s.starttls()
+s.login(usuario, senha)
 
 btCalendario = b'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGuSURBVHjarNS/b85RFMfx11N9tKiGikTSwSKxSAWxdDb4AyQmg/9BiJh0sFjE1jC0xKSLwSCpkjCQdFASosEgpEFoY6BazTH0PM1Jk8ojnpPcnPf9fu8993zO/SEilDYVEd/Wfftbm4uI6fqt26odw2EMowfntGd7sp3FDO6JiPPRORtpRERgFifxCH042GaGM+kPYRxDLcl38AxnsA/P2wx4CV9z7gSGGhHxGw9xEXNYwt42A77HJgxm3Y83ImIeO3TGFhoRsZS1GM30e7EtuYl+zCMwgO9Yxi78wM/k0zjanZOmcf0/s9uP4a7sLKcP3Cj8KvlX9uXiLb5aeBFrB3tr+lFMFZ5NvpylgLEMCpPYnNy3msaq3f6H67ZRG4+IaEn+VGReKfwg+S0+J98tMkcKf6ySW/4x3hV+UerWKsvL3Hn4gKfJzSp5ogOSx6rkL+lncaHwzeT7eJJ8rWxWtZUqdbE8R9sLDyTvXttFdua/9bZUAw6m7y8DKg8VPrHBwe6BRkTM5Yq3sJCLNPNKdeXAloLezGQFW0qwJk5hXkQciIjXHXhc30TEkT8DAFILwAACEvTGAAAAAElFTkSuQmCC'
 
@@ -90,6 +97,8 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
+    if event == None:
+        break
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
@@ -187,6 +196,7 @@ while True:
             quant = str(values['quant'])
             data_esperada = values['data_esperada']
             filial = values['filial']
+            nome_filial = filial.split('-',1)[1][1:]
             
             window['mensagem2'].update('')
             window['mensagem3'].update('')
@@ -258,13 +268,13 @@ while True:
                 page.locator('xpath=//*[@id="DataEsperada_Value"]').fill(data_esperada)
                 page.wait_for_timeout(500)
                 page.locator('xpath=//*[@id="select2-LocalEntrega_Value-container"]').click()
-                page.locator('xpath=/html/body/span/span/span[1]/input').fill(filial[5:])
+                page.locator('xpath=/html/body/span/span/span[1]/input').fill(nome_filial)
                 page.locator('xpath=/html/body/span/span/span[1]/input').press('Enter')
                 page.locator('xpath=//*[@id="CentroCusto_Text"]').fill(centro_custo[:4])
                 page.wait_for_timeout(1000)
                 page.locator('xpath=//*[@id="ui-id-2"]').click()
                 page.locator('xpath=//*[@id="select2-LocalFaturamento_Value-container"]').click()
-                page.locator('xpath=/html/body/span/span/span[1]/input').fill(filial[5:])
+                page.locator('xpath=/html/body/span/span/span[1]/input').fill(nome_filial)
                 page.locator('xpath=/html/body/span/span/span[1]/input').press('Enter')
                 page.locator('xpath=//*[@id="Observacao_Value"]').fill(comentario)
                 page.locator('xpath=//*[@id="btnAvancar"]').click()
