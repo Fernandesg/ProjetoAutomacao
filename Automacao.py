@@ -90,6 +90,8 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
+    if event == None:
+        break
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
