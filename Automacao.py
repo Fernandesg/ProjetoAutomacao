@@ -1,7 +1,6 @@
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
-import subprocess
 from datetime import datetime
 import smtplib
 
@@ -18,12 +17,6 @@ s.starttls()
 s.login(usuario_email, senha_email)
 
 btCalendario = b'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGuSURBVHjarNS/b85RFMfx11N9tKiGikTSwSKxSAWxdDb4AyQmg/9BiJh0sFjE1jC0xKSLwSCpkjCQdFASosEgpEFoY6BazTH0PM1Jk8ojnpPcnPf9fu8993zO/SEilDYVEd/Wfftbm4uI6fqt26odw2EMowfntGd7sp3FDO6JiPPRORtpRERgFifxCH042GaGM+kPYRxDLcl38AxnsA/P2wx4CV9z7gSGGhHxGw9xEXNYwt42A77HJgxm3Y83ImIeO3TGFhoRsZS1GM30e7EtuYl+zCMwgO9Yxi78wM/k0zjanZOmcf0/s9uP4a7sLKcP3Cj8KvlX9uXiLb5aeBFrB3tr+lFMFZ5NvpylgLEMCpPYnNy3msaq3f6H67ZRG4+IaEn+VGReKfwg+S0+J98tMkcKf6ySW/4x3hV+UerWKsvL3Hn4gKfJzSp5ogOSx6rkL+lncaHwzeT7eJJ8rWxWtZUqdbE8R9sLDyTvXttFdua/9bZUAw6m7y8DKg8VPrHBwe6BRkTM5Yq3sJCLNPNKdeXAloLezGQFW0qwJk5hXkQciIjXHXhc30TEkT8DAFILwAACEvTGAAAAAElFTkSuQmCC'
-
-def fecharcmd():
-    si = subprocess.STARTUPINFO()
-    si.dwFlags |= subprocess.STARTF_USESHOWWINDOW
-    #si.wShowWindow = subprocess.SW_HIDE # default
-    subprocess.call('taskkill /F /IM cmd.exe', startupinfo=si)
 
 passwords = open('credenciais.txt', 'r')
 login = []
@@ -166,25 +159,16 @@ while True:
         case 'limpar':
             limpaCampos()
         case 'Itens':
-            fecharcmd()
             os.system('codigos.txt')
-            fecharcmd()
         case 'Categorias':
-            fecharcmd()
             os.system('categorias.txt')
-            fecharcmd()
         case 'Centro de custos':
-            fecharcmd()
             os.system('centrocustos.txt')
-            fecharcmd()
         case 'Filiais':
-            fecharcmd()
             os.system('filiais.txt')
-            fecharcmd()
         case 'Credenciais ME':
-            fecharcmd()
             os.system('credenciais.txt')
-            fecharcmd()
+
         case sg.WIN_CLOSED:
             break
         case None:
