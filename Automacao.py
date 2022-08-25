@@ -5,11 +5,17 @@ import subprocess
 from datetime import datetime
 import smtplib
 
-usuario = 'pythonautoriza@gmail.com'
-senha = 'rpvaraebxzttqfss'
+credencialEmail = open('credencialEmail.txt', 'r')
+loginEmail = []
+
+for linhas in credencialEmail:
+    linhas = linhas.strip()
+    loginEmail.append(linhas)
+usuario_email = loginEmail[0][17:-1]
+senha_email = loginEmail[1][15:-1]
 s = smtplib.SMTP('smtp.gmail.com: 587')
 s.starttls()
-s.login(usuario, senha)
+s.login(usuario_email, senha_email)
 
 btCalendario = b'iVBORw0KGgoAAAANSUhEUgAAABQAAAAUCAYAAACNiR0NAAAACXBIWXMAAA3XAAAN1wFCKJt4AAAAIGNIUk0AAHolAACAgwAA+f8AAIDpAAB1MAAA6mAAADqYAAAXb5JfxUYAAAGuSURBVHjarNS/b85RFMfx11N9tKiGikTSwSKxSAWxdDb4AyQmg/9BiJh0sFjE1jC0xKSLwSCpkjCQdFASosEgpEFoY6BazTH0PM1Jk8ojnpPcnPf9fu8993zO/SEilDYVEd/Wfftbm4uI6fqt26odw2EMowfntGd7sp3FDO6JiPPRORtpRERgFifxCH042GaGM+kPYRxDLcl38AxnsA/P2wx4CV9z7gSGGhHxGw9xEXNYwt42A77HJgxm3Y83ImIeO3TGFhoRsZS1GM30e7EtuYl+zCMwgO9Yxi78wM/k0zjanZOmcf0/s9uP4a7sLKcP3Cj8KvlX9uXiLb5aeBFrB3tr+lFMFZ5NvpylgLEMCpPYnNy3msaq3f6H67ZRG4+IaEn+VGReKfwg+S0+J98tMkcKf6ySW/4x3hV+UerWKsvL3Hn4gKfJzSp5ogOSx6rkL+lncaHwzeT7eJJ8rWxWtZUqdbE8R9sLDyTvXttFdua/9bZUAw6m7y8DKg8VPrHBwe6BRkTM5Yq3sJCLNPNKdeXAloLezGQFW0qwJk5hXkQciIjXHXhc30TEkT8DAFILwAACEvTGAAAAAElFTkSuQmCC'
 
