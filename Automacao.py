@@ -4,7 +4,7 @@ import os
 from datetime import datetime
 import smtplib
 
-credencialEmail = open('credencialEmail.txt', 'r')
+credencialEmail = open('credencialEmail_AUT.txt', 'r')
 loginEmail = []
 
 for linhas in credencialEmail:
