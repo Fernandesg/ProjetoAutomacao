@@ -65,7 +65,7 @@ for linhas in categorias_caminho:
     linhas = linhas.strip()
     categorias.append(linhas)
 
-menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos', 'Filiais','---','Credenciais ME']]]
+menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos','Tipo requisição', 'Filiais','---','Credenciais ME']]]
 layout = [
     [sg.Menu(menu_def, pad=(10,10))],
     [sg.Checkbox('Abre nav:', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push()],
@@ -168,6 +168,8 @@ while True:
             os.system('filiais.txt')
         case 'Credenciais ME':
             os.system('credenciais.txt')
+        case 'Tipo requisição':
+            os.system('TipoRequisicao.txt')
 
         case sg.WIN_CLOSED:
             break
@@ -181,9 +183,9 @@ while True:
             centro_custo = values['centrocusto']
             cat_Pedido = values['catPedido']
             titulo_requisicao = values['titulo_requisicao']
-            item = str(values['item']).replace(' ','')
-            valorun = str(values['valorun']).replace(',','.')
-            quant = str(values['quant'])
+            item = str(values['item']).replace(' ','').split(";")
+            valorun = str(values['valorun']).replace(',','.').split(";")
+            quant = str(values['quant']).split(";")
             data_esperada = values['data_esperada']
             filial = values['filial']
             nome_filial = filial.split('-',1)[1][1:]
@@ -199,7 +201,7 @@ while True:
 
             with sync_playwright() as p:
                 
-                valorTotal = str(float(valorun) * int(quant))
+                # valorTotal = str(float(valorun) * int(quant))
                 if values['abrirNav']:
                     browser = p.chromium.launch(channel="chrome",headless=False)
                 else:
@@ -240,15 +242,18 @@ while True:
                 # SELECIONA ITENS E QUANTIDADES
                 window['mensagemProgresso'].update('Adicionando itens e quantidades')      
                 progress_bar.update_bar(3)
-                page.wait_for_timeout(1000)
-                page.locator('xpath=//*[@id="Valor"]').fill(item)
-                page.locator('xpath=//*[@id="btnSearchSimple"]').click()
-                page.locator('.icon-shopping-cart').click()
-                page.wait_for_timeout(1000)
-                page.locator('[name=\"item-quantity\"]').fill(quant)
-                page.wait_for_timeout(1000)
-                page.locator('[name=\"item-quantity\"]').press('Tab')
-                page.wait_for_timeout(1000)
+                for i in range(len(item)):
+                    page.wait_for_timeout(1000)
+                    page.locator('xpath=//*[@id="Valor"]').fill(item[i])
+                    page.locator('xpath=//*[@id="btnSearchSimple"]').click()
+                    page.locator('.icon-shopping-cart').click()
+                    page.wait_for_timeout(1000)
+                    page.keyboard.press('Control+A')
+                    page.wait_for_timeout(1000)
+                    page.keyboard.type(quant[i])
+                    page.wait_for_timeout(1000)
+                    page.keyboard.press('Tab')
+                    page.wait_for_timeout(1000)
                 page.locator('xpath=//*[@id="btnAvancar"]').click()
 
                 # TELA CONDIÇÕES GERAIS
@@ -272,15 +277,17 @@ while True:
                 #            TELA DETALHES DOS ITENS
                 window['mensagemProgresso'].update('Ajustando detalhes dos itens')      
                 progress_bar.update_bar(5)
-                page.locator('xpath=//*[@id="Itens_0__PrecoEstimado_Value"]').fill(valorun.replace(".",","))
-                page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').click()
-                page.locator('xpath=//*[@id="select2-Itens_0__CategoriaContabil_Value-container"]').press('Enter')
-                page.wait_for_timeout(1000)
-                if cat_Pedido == 'PEDIDO REGULARIZACAO':
-                    page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
-                else:
-                    page.locator('xpath=//*[@id="Itens_0__Attributes_1__valor"]').fill(titulo_requisicao)
-                    page.locator('xpath=//*[@id="Itens_0__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
+                for i in range(len(item)):
+                    valorTotal = str(float(valorun[i]) * int(quant[i]))
+                    page.locator(f'xpath=//*[@id="Itens_{i}__PrecoEstimado_Value"]').fill(valorun[i].replace(".",","))
+                    page.locator(f'xpath=//*[@id="select2-Itens_{i}__CategoriaContabil_Value-container"]').click()
+                    page.locator(f'xpath=//*[@id="select2-Itens_{i}__CategoriaContabil_Value-container"]').press('Enter')
+                    page.wait_for_timeout(1000)
+                    if cat_Pedido == 'PEDIDO REGULARIZACAO':
+                        page.locator(f'xpath=//*[@id="Itens_{i}__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
+                    else:
+                        page.locator(f'xpath=//*[@id="Itens_{i}__Attributes_1__valor"]').fill(titulo_requisicao)
+                        page.locator(f'xpath=//*[@id="Itens_{i}__Attributes_0__valor"]').fill(valorTotal.replace(".",","))
                 page.locator('xpath=//*[@id="btnAvancar"]').click()
                 page.wait_for_timeout(1000)
 
