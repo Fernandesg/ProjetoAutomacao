@@ -4,6 +4,9 @@ import os
 from datetime import datetime
 import smtplib
 
+
+cod = ''
+codLista = []
 credencialEmail = open('credencialEmail_AUT.txt', 'r')
 loginEmail = []
 
@@ -39,7 +42,7 @@ listaTipo = []
 dicioTipo = {}
 with open("TipoRequisicao.txt", encoding="UTF-8") as dicionarioTipoReq:
     for line in dicionarioTipoReq:
-       (k, v) = line.split()
+       (k, v) = line.split(';')
        dicioTipo[str(k)] = v
     for chave in dicioTipo.keys():
         listaTipo.append(chave)
@@ -96,6 +99,7 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
+
     if event == None:
         break
     def limpaCampos(): # Limpa todos os campos
@@ -121,6 +125,7 @@ while True:
         values['comentario'] = ''
         window['tipoRequisicao'].update('')
         values['tipoRequisicao'] = ''
+        cod = ''
         validaPedido()
         validacao()
         window['botaoCriar'].update(disabled=True)
@@ -144,13 +149,14 @@ while True:
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
 
-    match(values['tipoRequisicao']):
-        case 'Manutenção(serviço)':
-            print('Funcionando')
     validacao()
     match(event):
         case 'tipoRequisicao':
-            window['item'].update(dicioTipo[values["tipoRequisicao"]])
+            cod = dicioTipo[values["tipoRequisicao"]] + ';' + cod
+            window['item'].update(cod)
+            codLista.append(dicioTipo[values["tipoRequisicao"]])
+            print(cod)
+            
         case 'catPedido':
             validacao()
             validaPedido()
@@ -158,6 +164,7 @@ while True:
             values['inputCaminhoArquivo'] = ''
         case 'limpar':
             limpaCampos()
+            cod = ''
         case 'Itens':
             os.system('codigos.txt')
         case 'Categorias':
@@ -242,7 +249,7 @@ while True:
                 # SELECIONA ITENS E QUANTIDADES
                 window['mensagemProgresso'].update('Adicionando itens e quantidades')      
                 progress_bar.update_bar(3)
-                for i in range(len(item)):
+                for i in range(len(quant)):
                     page.wait_for_timeout(1000)
                     page.locator('xpath=//*[@id="Valor"]').fill(item[i])
                     page.locator('xpath=//*[@id="btnSearchSimple"]').click()
@@ -277,7 +284,7 @@ while True:
                 #            TELA DETALHES DOS ITENS
                 window['mensagemProgresso'].update('Ajustando detalhes dos itens')      
                 progress_bar.update_bar(5)
-                for i in range(len(item)):
+                for i in range(len(quant)):
                     valorTotal = str(float(valorun[i]) * int(quant[i]))
                     page.locator(f'xpath=//*[@id="Itens_{i}__PrecoEstimado_Value"]').fill(valorun[i].replace(".",","))
                     page.locator(f'xpath=//*[@id="select2-Itens_{i}__CategoriaContabil_Value-container"]').click()
