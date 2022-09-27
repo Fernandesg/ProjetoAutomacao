@@ -1,3 +1,4 @@
+from time import sleep
 import PySimpleGUI as sg
 from playwright.sync_api import sync_playwright
 import os
@@ -5,6 +6,7 @@ from datetime import datetime
 import smtplib
 from openpyxl import Workbook, load_workbook
 from datetime import date
+
 
 cod = ''
 codLista = []
@@ -73,10 +75,11 @@ tabela = load_workbook('notas.xlsm', data_only=True)
 aba_ativa = tabela['REQUISIÇÕES PENDENTES']
 ultimaLinha = 'B' + str(len(aba_ativa['B'])+1)
 
-menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos','Tipo requisição', 'Filiais','---','Credenciais ME']]]
+menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos','Tipo requisição', 'Filiais','---','Credenciais ME','Monitorar requisições']]]
+
 layout = [
-    [sg.Menu(menu_def, pad=(10,10))],
-    [sg.Checkbox('Abre nav:', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push()],
+    [sg.Menu(menu_def, pad=(10,10)),sg.Push()],
+    [sg.Checkbox('Abre nav', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push(), sg.Checkbox('Monitor', default=False, key="monitorReq",enable_events=True) ,sg.Push()],
     [sg.Push(), sg.Input(key='titulo_requisicao', enable_events=True), sg.Push()],
     [sg.Text('      Tipo de requisição'), sg.Push()],
     [sg.Push(), sg.Combo(listaTipo, key='tipoRequisicao', enable_events=True, size=(43,1), readonly=True), sg.Push()],
@@ -104,21 +107,13 @@ window = sg.Window('Abertura de requisições', size=(400, 600), layout = layout
 progress_bar = window['progress']
 while True:
     event, values = window.read()
-    comentario = values['comentario']
-    caminho_arquivo = str(values["caminhoArquivo"]).split(';')
-    centro_custo = values['centrocusto']
-    cat_Pedido = values['catPedido']
-    titulo_requisicao = values['titulo_requisicao']
-    item = str(values['item']).replace(' ','').split(";")
-    valorun = str(values['valorun']).replace(',','.').split(";")
-    quant = str(values['quant']).split(";")
-    data_esperada = values['data_esperada']
-    filial = values['filial']
-    nome_filial = filial.split('-',1)[1][1:]
 
+    if event == None:
+        break
+    
     def monitorME():
         with sync_playwright() as p:
-            browser = p.chromium.launch(channel="chrome", headless=False)
+            browser = p.chromium.launch(channel="chrome")
             page = browser.new_page()
             page.goto(site)
 
@@ -139,6 +134,7 @@ while True:
 
                     if statusRequisicao == 'APROVADO':
                     #CRIAR PRE-PEDIDO
+                        sg.popup(f'Requisição {reqPendente} aprovada!\nCriando pré-pedido')
                         page.locator('xpath=//*[@id="btnEmergency"]').click()
                         page.locator('xpath=/html/body/div[1]/div[3]/div/button[1]/span').click()
                         page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
@@ -147,11 +143,11 @@ while True:
                         page.locator('xpath=//*[@id="grid"]/div[2]/table/tbody/tr/td[1]/div/input').click()
                         page.locator('xpath=//*[@id="btnSalvarSelecao"]').click()
                         page.locator('xpath=//*[@id="btnVoltarPrePedEmergencial"]').click()
-                        page.locator('xpath=//*[@id="Resumo"]').fill(titulo_requisicao)
+                        page.locator('xpath=//*[@id="Resumo"]').fill(values['data_esperada'])
                         filiaisPrePedido = page.locator('//select[@name="LocalCobranca"]').inner_html().split('\n')
                         indice = [i for i, s in enumerate(filiaisPrePedido) if nome_filial in s][0]
                         page.locator('//select[@name="LocalCobranca"]').select_option(index=indice-1)
-                        page.locator('xpath=//*[@id="DataEntrega"]').fill(data_esperada)
+                        page.locator('xpath=//*[@id="DataEntrega"]').fill(values['titulo_requisicao'])
                         page.locator('xpath=//*[@id="MEComponentManager_MEButton_3"]').click()
                         page.locator('xpath=/html/body/main/form[2]/table[3]/tbody/tr[1]/td/input[1]').click()
                         page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
@@ -163,19 +159,17 @@ while True:
                         aba_ativa[f'E{linha}'] = numPrePedido
                     
                 if celula.value == 'Pendente' and aba_ativa[f'E{linha}'].value != None:
-                    print('Possui pré pedido')
+                    
                     prePedidoPendente = aba_ativa[f'E{linha}'].value
-                    print(prePedidoPendente)
                     page.goto(f'https://www.me.com.br/VerPrePedidoWF.asp?Pedido={prePedidoPendente}&SuperCleanPage=false&Origin=home')
                     statusPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[2]/div[2]/p[1]/span[2]').inner_html().strip()[:8]
                     if statusPrePedido == 'APROVADO':
                         numPedidoSAP = page.locator('xpath=/html/body/main/div/div[1]/div[1]/p[1]').inner_html().strip()
                         aba_ativa[f'G{linha}'] = numPedidoSAP
+                        sg.popup(f'Pré-Pedido {prePedidoPendente} aprovado!\nO número do seu pedido é {numPedidoSAP}')
 
             tabela.save('Tabelateste.xlsx')
     
-    if event == None:
-        break
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
         values['titulo_requisicao'] = ''
@@ -222,7 +216,9 @@ while True:
             window['txtSelecionaArquivo'].update(visible = False)
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
-
+    while values['monitorReq'] == True:
+        sleep(60)
+        monitorME()
     validacao()
     match(event):
         case 'tipoRequisicao':
@@ -240,6 +236,8 @@ while True:
             cod = ''
         case 'Itens':
             os.system('codigos.txt')
+        case 'Monitorar requisições':
+            monitorME()
         case 'Categorias':
             os.system('categorias.txt')
         case 'Centro de custos':
@@ -258,6 +256,17 @@ while True:
         case 'Cancelar':
             break
         case 'botaoCriar': 
+            comentario = values['comentario']
+            caminho_arquivo = str(values["caminhoArquivo"]).split(';')
+            centro_custo = values['centrocusto']
+            cat_Pedido = values['catPedido']
+            titulo_requisicao = values['titulo_requisicao']
+            item = str(values['item']).replace(' ','').split(";")
+            valorun = str(values['valorun']).replace(',','.').split(";")
+            quant = str(values['quant']).split(";")
+            data_esperada = values['data_esperada']
+            filial = values['filial']
+            nome_filial = filial.split('-',1)[1][1:]
             
             
             window['mensagem2'].update('')
