@@ -217,7 +217,7 @@ while True:
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
     while values['monitorReq'] == True:
-        sleep(60)
+        sleep(300)
         monitorME()
     validacao()
     match(event):
