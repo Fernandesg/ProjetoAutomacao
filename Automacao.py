@@ -135,28 +135,28 @@ while True:
                     if statusRequisicao == 'APROVADO':
                     #CRIAR PRE-PEDIDO
                         sg.popup(f'Requisição {reqPendente} aprovada!\nCriando pré-pedido')
-                        # page.locator('xpath=//*[@id="btnEmergency"]').click()
-                        # page.locator('xpath=/html/body/div[1]/div[3]/div/button[1]/span').click()
-                        # page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        # page.locator('xpath=//*[@id="CGC"]').fill(cnpj)
-                        # page.keyboard.press('Enter')
-                        # page.locator('xpath=//*[@id="grid"]/div[2]/table/tbody/tr/td[1]/div/input').click()
-                        # page.locator('xpath=//*[@id="btnSalvarSelecao"]').click()
-                        # page.locator('xpath=//*[@id="btnVoltarPrePedEmergencial"]').click()
-                        # page.locator('xpath=//*[@id="Resumo"]').fill(values['data_esperada'])
-                        # filiaisPrePedido = page.locator('//select[@name="LocalCobranca"]').inner_html().split('\n')
-                        # indice = [i for i, s in enumerate(filiaisPrePedido) if nome_filial in s][0]
-                        # page.locator('//select[@name="LocalCobranca"]').select_option(index=indice-1)
-                        # page.locator('xpath=//*[@id="DataEntrega"]').fill(values['titulo_requisicao'])
-                        # page.locator('xpath=//*[@id="MEComponentManager_MEButton_3"]').click()
-                        # page.locator('xpath=/html/body/main/form[2]/table[3]/tbody/tr[1]/td/input[1]').click()
-                        # page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        # page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        # page.locator('xpath=//*[@id="formItemStatusHistory"]/div/b[1]/a').click()
-                        # numPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[1]/p').inner_html().strip()
-                        # statusPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[2]/div[2]/p[1]/span[2]').inner_html().strip()
-                        # aba_ativa[f'F{linha}'] = date.today().strftime('%d/%m/%Y')
-                        # aba_ativa[f'E{linha}'] = numPrePedido
+                        page.locator('xpath=//*[@id="btnEmergency"]').click()
+                        page.locator('xpath=/html/body/div[1]/div[3]/div/button[1]/span').click()
+                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
+                        page.locator('xpath=//*[@id="CGC"]').fill(cnpj)
+                        page.keyboard.press('Enter')
+                        page.locator('xpath=//*[@id="grid"]/div[2]/table/tbody/tr/td[1]/div/input').click()
+                        page.locator('xpath=//*[@id="btnSalvarSelecao"]').click()
+                        page.locator('xpath=//*[@id="btnVoltarPrePedEmergencial"]').click()
+                        page.locator('xpath=//*[@id="Resumo"]').fill(values['data_esperada'])
+                        filiaisPrePedido = page.locator('//select[@name="LocalCobranca"]').inner_html().split('\n')
+                        indice = [i for i, s in enumerate(filiaisPrePedido) if nome_filial in s][0]
+                        page.locator('//select[@name="LocalCobranca"]').select_option(index=indice-1)
+                        page.locator('xpath=//*[@id="DataEntrega"]').fill(values['titulo_requisicao'])
+                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_3"]').click()
+                        page.locator('xpath=/html/body/main/form[2]/table[3]/tbody/tr[1]/td/input[1]').click()
+                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
+                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
+                        page.locator('xpath=//*[@id="formItemStatusHistory"]/div/b[1]/a').click()
+                        numPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[1]/p').inner_html().strip()
+                        statusPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[2]/div[2]/p[1]/span[2]').inner_html().strip()
+                        aba_ativa[f'F{linha}'] = date.today().strftime('%d/%m/%Y')
+                        aba_ativa[f'E{linha}'] = numPrePedido
                     
                 if celula.value == 'Pendente' and aba_ativa[f'E{linha}'].value != None:
                     
@@ -313,8 +313,11 @@ while True:
                 page.wait_for_timeout(500)
                 frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
                 page.wait_for_timeout(500)
-                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').fill(filial)
+                if frame.locator('xpath=//*[@id="BOrgs_0__BorgDescription"]').input_value().strip() == "":
+                    frame.locator('xpath=//*[@id="BOrgs_0__BorgDescription"]').fill("1 - VERO S.A.")
+                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
                 page.wait_for_timeout(500)
+                frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').fill(filial)
                 frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
                 frame.locator('xpath=//*[@id="btnSave"]').click()
 
