@@ -131,7 +131,7 @@ while True:
                     reqPendente = aba_ativa[f'B{linha}'].value
                     page.goto(f'https://www.me.com.br/DO/Request/Home.mvc/Show/{reqPendente}')
                     statusRequisicao = page.locator('//*[@id="formRequest"]/div/div[2]/div[2]/p[2]/span[2]').inner_html().strip()
-
+                    filial_requisicao = page.locator('//*[@id="formRequest"]/section[1]/div[1]/div[2]').inner_html().split('-')[0].strip()
                     if statusRequisicao == 'APROVADO':
                     #CRIAR PRE-PEDIDO
                         sg.popup(f'Requisição {reqPendente} aprovada!\nCriando pré-pedido')
@@ -145,7 +145,7 @@ while True:
                         page.locator('xpath=//*[@id="btnVoltarPrePedEmergencial"]').click()
                         page.locator('xpath=//*[@id="Resumo"]').fill(values['data_esperada'])
                         filiaisPrePedido = page.locator('//select[@name="LocalCobranca"]').inner_html().split('\n')
-                        indice = [i for i, s in enumerate(filiaisPrePedido) if nome_filial in s][0]
+                        indice = [i for i, s in enumerate(filiaisPrePedido) if filial_requisicao in s][0]
                         page.locator('//select[@name="LocalCobranca"]').select_option(index=indice-1)
                         page.locator('xpath=//*[@id="DataEntrega"]').fill(values['titulo_requisicao'])
                         page.locator('xpath=//*[@id="MEComponentManager_MEButton_3"]').click()
@@ -254,7 +254,7 @@ while True:
         case None:
             break
         case 'Cancelar':
-            break
+            break 
         case 'botaoCriar': 
             comentario = values['comentario']
             caminho_arquivo = str(values["caminhoArquivo"]).split(';')
@@ -267,7 +267,6 @@ while True:
             data_esperada = values['data_esperada']
             filial = values['filial']
             nome_filial = filial.split('-',1)[1][1:]
-            
             
             window['mensagem2'].update('')
             window['mensagem3'].update('')
