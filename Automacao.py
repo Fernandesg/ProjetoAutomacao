@@ -243,8 +243,8 @@ while True:
                 page.wait_for_timeout(500)
                 frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
                 page.wait_for_timeout(500)
-                if frame.locator('xpath=//*[@id="BOrgs_0__BorgDescription"]').input_value().strip() == "":
-                    frame.locator('xpath=//*[@id="BOrgs_0__BorgDescription"]').fill("1 - VERO S.A.")
+
+                frame.locator('xpath=//*[@id="BOrgs_0__BorgDescription"]').fill("1 - VERO S.A.")
                 frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').press('Tab')
                 page.wait_for_timeout(500)
                 frame.locator('xpath=//*[@id="BOrgs_1__BorgDescription"]').fill(filial)
