@@ -4,9 +4,7 @@ from playwright.sync_api import sync_playwright
 import os
 from datetime import datetime
 import smtplib
-from openpyxl import Workbook, load_workbook
 from datetime import date
-
 
 cod = ''
 codLista = []
@@ -45,7 +43,7 @@ listaTipo = []
 dicioTipo = {}
 with open("TipoRequisicao.txt", encoding="UTF-8") as dicionarioTipoReq:
     for line in dicionarioTipoReq:
-       (k, v) = line.split(';')
+       (k, v) = line.split(';',1)
        dicioTipo[str(k)] = v
     for chave in dicioTipo.keys():
         listaTipo.append(chave)
@@ -71,15 +69,11 @@ for linhas in categorias_caminho:
     linhas = linhas.strip()
     categorias.append(linhas)
 
-tabela = load_workbook('notas.xlsm', data_only=True)
-aba_ativa = tabela['REQUISIÇÕES PENDENTES']
-ultimaLinha = 'B' + str(len(aba_ativa['B'])+1)
-
-menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos','Tipo requisição', 'Filiais','---','Credenciais ME','Monitorar requisições']]]
+menu_def=[['Arquivos', ['Itens', 'Categorias', 'Centro de custos','Tipo requisição', 'Filiais','---','Credenciais ME']]]
 
 layout = [
     [sg.Menu(menu_def, pad=(10,10)),sg.Push()],
-    [sg.Checkbox('Abre nav', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push(), sg.Checkbox('Monitor', default=False, key="monitorReq",enable_events=True) ,sg.Push()],
+    [sg.Checkbox('Abre nav', default=False, key="abrirNav",enable_events=True),sg.Text('      Título da requisição'), sg.Push(),sg.Push()],
     [sg.Push(), sg.Input(key='titulo_requisicao', enable_events=True), sg.Push()],
     [sg.Text('      Tipo de requisição'), sg.Push()],
     [sg.Push(), sg.Combo(listaTipo, key='tipoRequisicao', enable_events=True, size=(43,1), readonly=True), sg.Push()],
@@ -111,64 +105,6 @@ while True:
     if event == None:
         break
     
-    def monitorME():
-        with sync_playwright() as p:
-            browser = p.chromium.launch(channel="chrome", headless=False)
-            page = browser.new_page()
-            page.goto(site)
-
-            # LOGIN ME
-            page.locator('xpath=//*[@id="LoginName"]').fill(usuario_me)
-            page.locator('xpath=//*[@id="RAWSenha"]').fill(senha_me)
-            page.locator('xpath=//*[@id="SubmitAuth"]').click()
-            page.wait_for_timeout(1)
-
-            # ANALISA STATUS DA REQUISIÇÃO E ATUALIZA PLANILHA
-            for celula in aba_ativa['I']:
-                linha = celula.row
-                if celula.value == 'Pendente' and aba_ativa[f'E{linha}'].value == None:
-                    cnpj = aba_ativa[f'D{linha}'].value
-                    reqPendente = aba_ativa[f'B{linha}'].value
-                    page.goto(f'https://www.me.com.br/DO/Request/Home.mvc/Show/{reqPendente}')
-                    statusRequisicao = page.locator('//*[@id="formRequest"]/div/div[2]/div[2]/p[2]/span[2]').inner_html().strip()
-                    filial_requisicao = page.locator('//*[@id="formRequest"]/section[1]/div[1]/div[2]').inner_html().split('-')[0].strip()
-                    if statusRequisicao == 'APROVADO':
-                    #CRIAR PRE-PEDIDO
-                        sg.popup(f'Requisição {reqPendente} aprovada!\nCriando pré-pedido')
-                        page.locator('xpath=//*[@id="btnEmergency"]').click()
-                        page.locator('xpath=/html/body/div[1]/div[3]/div/button[1]/span').click()
-                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        page.locator('xpath=//*[@id="CGC"]').fill(cnpj)
-                        page.keyboard.press('Enter')
-                        page.locator('xpath=//*[@id="grid"]/div[2]/table/tbody/tr/td[1]/div/input').click()
-                        page.locator('xpath=//*[@id="btnSalvarSelecao"]').click()
-                        page.locator('xpath=//*[@id="btnVoltarPrePedEmergencial"]').click()
-                        page.locator('xpath=//*[@id="Resumo"]').fill(values['data_esperada'])
-                        filiaisPrePedido = page.locator('//select[@name="LocalCobranca"]').inner_html().split('\n')
-                        indice = [i for i, s in enumerate(filiaisPrePedido) if filial_requisicao in s][0]
-                        page.locator('//select[@name="LocalCobranca"]').select_option(index=indice-1)
-                        page.locator('xpath=//*[@id="DataEntrega"]').fill(values['titulo_requisicao'])
-                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_3"]').click()
-                        page.locator('xpath=/html/body/main/form[2]/table[3]/tbody/tr[1]/td/input[1]').click()
-                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        page.locator('xpath=//*[@id="MEComponentManager_MEButton_2"]').click()
-                        page.locator('xpath=//*[@id="formItemStatusHistory"]/div/b[1]/a').click()
-                        numPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[1]/p').inner_html().strip()
-                        statusPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[2]/div[2]/p[1]/span[2]').inner_html().strip()
-                        aba_ativa[f'F{linha}'] = date.today().strftime('%d/%m/%Y')
-                        aba_ativa[f'E{linha}'] = numPrePedido
-                    
-                if celula.value == 'Pendente' and aba_ativa[f'E{linha}'].value != None:
-                    
-                    prePedidoPendente = aba_ativa[f'E{linha}'].value
-                    page.goto(f'https://www.me.com.br/VerPrePedidoWF.asp?Pedido={prePedidoPendente}&SuperCleanPage=false&Origin=home')
-                    statusPrePedido = page.locator('xpath=/html/body/main/div/div[1]/div[2]/div[2]/p[1]/span[2]').inner_html().strip()[:8]
-                    if statusPrePedido == 'APROVADO':
-                        numPedidoSAP = page.locator('xpath=/html/body/main/div/div[1]/div[1]/p[1]').inner_html().strip()
-                        aba_ativa[f'G{linha}'] = numPedidoSAP
-                        sg.popup(f'Pré-Pedido {prePedidoPendente} aprovado!\nO número do seu pedido é {numPedidoSAP}')
-
-            tabela.save('Tabelateste.xlsx')
     
     def limpaCampos(): # Limpa todos os campos
         window['titulo_requisicao'].update('')
@@ -216,9 +152,6 @@ while True:
             window['txtSelecionaArquivo'].update(visible = False)
             window['inputCaminhoArquivo'].update(visible = False)
             window['caminhoArquivo'].update(visible = False)
-    while values['monitorReq'] == True:
-        sleep(300)
-        monitorME()
     validacao()
     match(event):
         case 'tipoRequisicao':
@@ -236,8 +169,6 @@ while True:
             cod = ''
         case 'Itens':
             os.system('codigos.txt')
-        case 'Monitorar requisições':
-            monitorME()
         case 'Categorias':
             os.system('categorias.txt')
         case 'Centro de custos':
@@ -396,5 +327,3 @@ while True:
                 window['mensagem4'].update(visible=True)
                 window['espacamento2'].update(visible = True)
                 window['mensagem4'].update(requisicao.inner_html().strip()[4:])
-                if cat_Pedido == 'PEDIDO REGULARIZACAO':
-                    aba_ativa[ultimaLinha] = requisicao
