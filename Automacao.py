@@ -225,6 +225,8 @@ while True:
             cod = dicioTipo[values["tipoRequisicao"]] + ';' + cod
             window['item'].update(cod)
             codLista.append(dicioTipo[values["tipoRequisicao"]])
+            print(cod)
+            print(codLista)
             
         case 'catPedido':
             validacao()
